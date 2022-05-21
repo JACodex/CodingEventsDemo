@@ -13,10 +13,17 @@ namespace coding_events_practice.Controllers
 {
     public class EventsController : Controller
     {
+        private EventDbContext _db;
+
+       public EventsController(EventDbContext dbContext)
+        {
+            _db = dbContext;
+        }
         // GET: /<controller>/
         public IActionResult Index()
         {
-            List<Event> events = new List<Event>(EventData.GetAll());
+            //List<Event> events = new List<Event>(EventData.GetAll());
+            List<Event> events = _db.Events.ToList();
 
             return View(events);
         }
@@ -41,17 +48,41 @@ namespace coding_events_practice.Controllers
                     Type = addEventViewModel.Type
                 };
 
-                EventData.Add(newEvent);
+                //EventData.Add(newEvent);
+                _db.Events.Add(newEvent);
+                _db.SaveChanges();
 
                 return Redirect("/Events");
             }
 
             return View(addEventViewModel);
         }
+        [HttpGet]
+        [Route("/Events/Edit/{eventId}")]
+        public IActionResult Edit(int eventId)
+        {
+            //controller code will go here
+            Event editedEvent = EventData.GetById(eventId);
+            ViewBag.editedEvent = editedEvent;
+            ViewBag.eventId = eventId;
+            ViewBag.title = $"Edit Event {editedEvent.Name} id = {editedEvent.Id}";
+            return View();
+        }
+
+        [HttpPost]
+        [Route("/Events/Edit")]
+        public IActionResult SubmitEditEventForm(int eventId, string name, string description)
+        {
+            ViewBag.editedEvent = EventData.GetById(eventId);
+            ViewBag.editedEvent.Name = name;
+            ViewBag.editedEvent.Description = description;
+            return Redirect("/Events");
+        }
 
         public IActionResult Delete()
         {
-            ViewBag.events = EventData.GetAll();
+            //ViewBag.events = EventData.GetAll();
+            ViewBag.events = _db.Events.ToList();
 
             return View();
         }
@@ -61,8 +92,14 @@ namespace coding_events_practice.Controllers
         {
             foreach (int eventId in eventIds)
             {
-                EventData.Remove(eventId);
+                //EventData.Remove(eventId);
+                Event theEvent = _db.Events.Find(eventId);
+                if (theEvent != null)
+                {
+                    _db.Events.Remove(theEvent);
+                }
             }
+            _db.SaveChanges();
 
             return Redirect("/Events");
         }
