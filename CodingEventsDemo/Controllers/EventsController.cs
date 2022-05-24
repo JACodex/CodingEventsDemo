@@ -33,6 +33,11 @@ namespace coding_events_practice.Controllers
         //public IActionResult Add(Event newEvent)
         public IActionResult Add(AddEventViewModel addEventViewModel)
         {
+
+            if (!ModelState.IsValid)
+            {
+                return View("Add", addEventViewModel);
+            }
             Event @event = new Event
             {
                 Name = addEventViewModel.Name,
